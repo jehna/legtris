@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: f78af22289ee5a6409a0814eb97d18a2
+TrueTypeFontImporter:
+  serializedVersion: 2
+  fontSize: 200
+  forceTextureCase: 3
+  characterSpacing: 1
+  characterPadding: 0
+  includeFontData: 1
+  use2xBehaviour: 0
+  fontNames: []
+  fallbackFontReferences: []
+  customCharacters: Game Ovr
+  fontRenderingMode: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

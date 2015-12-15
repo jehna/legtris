@@ -1,0 +1,97 @@
+#pragma strict
+
+class Area extends UnityEngine.Object{
+	
+	private var __cols : int;
+	private var __rows : int;
+	
+	private var matrix : boolean[,,];
+	private var heightBlocks : Array[] = new Array[10];
+	
+	public function Area(cols : int, rows : int) {
+							// Height, X, Y
+		matrix = new boolean[10,cols,rows];
+		__cols = cols;
+		__rows = rows;
+	}
+	
+	public function get size() : Vector2 {
+		return Vector2(__cols, __rows);
+	}
+	
+	public function SetAreaReserved(blockArea : Vector2[], height : int, byObject : GameObject) {
+		if(heightBlocks[height] == null) heightBlocks[height] = new Array();
+		heightBlocks[height].Push(byObject);
+		for(var pos : Vector2 in blockArea) {
+			SetReserved(pos.x, pos.y, height);
+		}
+	}
+	
+	public function SetReserved(x : int, y : int, height : int) {
+		matrix[height,x,y] = true;
+		CheckLevel(height);
+	}
+	
+	public function GetFirstAvailableHeightForBlock(blockArea : Vector2[]) {	
+		var maxHeight : int = 0;
+		for(var pos : Vector2 in blockArea) {
+			var posHeight : int = GetFirstAvailableHeight(pos.x, pos.y);
+			maxHeight = Mathf.Max(posHeight, maxHeight);
+		}
+		return maxHeight;
+	}
+	
+	public function GetFirstAvailableHeight(x : int,y : int) : int {
+		var maxHeight : int = -1;
+		for(var height : int = 0; height < 10; height++) {
+			if(matrix[height,x,y]) maxHeight = height+1;
+		}
+		if(maxHeight >= 10) maxHeight = -1;
+		return maxHeight;
+	}
+	
+	public function SetNotReserved(x : int, y : int, height : int) {
+		matrix[height,x,y] = false;
+	}
+	
+	public function GetReserved(x : int, y : int, height : int) : boolean {
+		return matrix[height,x,y];
+	}
+	
+	public function CheckLevel(height : int) {
+		for(var x : int = 0; x < __cols; x++) {
+			for(var y : int = 0; y < __rows; y++) {
+				if(!matrix[height,x,y]) return;
+			}
+		}
+		DestroyHeight(height);
+	}
+	
+	public function DestroyHeight(height : int) {
+		Debug.Log("Destroying height: " + height);
+		Game.objects.blockRowDestroyEffect.PlayBlockParticleEffect(Vector3.up * (height - 1));
+		Game.objects.camWhiter.WhiteOut();
+		Game.objects.blockRowDestroySound.Play();
+		
+		while(heightBlocks[height].length > 0) {
+			(heightBlocks[height].Pop() as GameObject).SendMessage("Die",null,SendMessageOptions.DontRequireReceiver);
+		}
+		height++;
+		
+		while(height < 10) {
+			heightBlocks[height-1] = heightBlocks[height];
+			if(heightBlocks[height]) {
+				for(var g : GameObject in (heightBlocks[height].ToBuiltin(GameObject) as GameObject[])) {
+					g.SendMessage("FallDown",null,SendMessageOptions.DontRequireReceiver);
+				}
+			}
+			for(var x : int = 0; x < __cols; x++) {
+				for(var y : int = 0; y < __rows; y++) {
+					matrix[height-1,x,y] = matrix[height,x,y];
+				}
+			}
+			height++;
+		}
+	}
+	
+}
